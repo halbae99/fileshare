@@ -4,8 +4,37 @@ import { randomUUID } from 'node:crypto'
 // Maximum file size: 5 MB (Netlify Functions sync body limit ~6 MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 
+function corsJson() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+  }
+}
+
+interface IndexEntry {
+  key: string
+  originalName: string
+  size: number
+  contentType: string
+  uploadedAt: string
+  expiresAt: string
+}
+
+async function updateIndex(
+  store: ReturnType<typeof getStore>,
+  entry: IndexEntry
+) {
+  try {
+    const raw = await store.get('_index', { type: 'json' })
+    const index: IndexEntry[] = Array.isArray(raw) ? raw : []
+    index.push(entry)
+    await store.setJSON('_index', index)
+  } catch {
+    // If index update fails, the file is still stored.
+  }
+}
+
 export default async (req: Request) => {
-  // CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -53,12 +82,10 @@ export default async (req: Request) => {
       )
     }
 
-    // Parse expiration (in milliseconds)
     const expiresInMs = expiresInRaw
       ? parseInt(expiresInRaw, 10)
-      : 24 * 60 * 60 * 1000 // default: 24 hours
+      : 24 * 60 * 60 * 1000
 
-    // Clamp to reasonable range: 1 minute to 365 days
     const clampedExpiresInMs = Math.max(
       60 * 1000,
       Math.min(expiresInMs, 365 * 24 * 60 * 60 * 1000)
@@ -66,8 +93,6 @@ export default async (req: Request) => {
 
     const now = Date.now()
     const expiresAt = new Date(now + clampedExpiresInMs).toISOString()
-
-    // Generate unique key (Node.js 18+ compatible via node:crypto import)
     const key = randomUUID()
     const buffer = await file.arrayBuffer()
 
@@ -83,7 +108,6 @@ export default async (req: Request) => {
       },
     })
 
-    // Update the index blob for fast listing
     await updateIndex(store, {
       key,
       originalName: file.name,
@@ -94,7 +118,6 @@ export default async (req: Request) => {
     })
 
     const origin = new URL(req.url).origin
-    const downloadUrl = `${origin}/api/download/${key}`
 
     return new Response(
       JSON.stringify({
@@ -104,7 +127,7 @@ export default async (req: Request) => {
         contentType: file.type,
         uploadedAt: new Date(now).toISOString(),
         expiresAt,
-        downloadUrl,
+        downloadUrl: `${origin}/api/download?key=${key}`,
         expired: false,
       }),
       {
@@ -112,44 +135,14 @@ export default async (req: Request) => {
         headers: corsJson(),
       }
     )
-  } catch (err) {
-    console.error('Upload error:', err)
+  } catch (err: any) {
+    console.error('Upload error:', err?.message || err)
     return new Response(
-      JSON.stringify({ error: 'Upload failed. Please try again.' }),
+      JSON.stringify({
+        error: 'Upload failed',
+        detail: err?.message || String(err),
+      }),
       { status: 500, headers: corsJson() }
     )
-  }
-}
-
-// ----- helpers -----
-
-function corsJson() {
-  return {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-  }
-}
-
-interface IndexEntry {
-  key: string
-  originalName: string
-  size: number
-  contentType: string
-  uploadedAt: string
-  expiresAt: string
-}
-
-async function updateIndex(
-  store: ReturnType<typeof getStore>,
-  entry: IndexEntry
-) {
-  try {
-    const raw = await store.get('_index', { type: 'json' })
-    const index: IndexEntry[] = Array.isArray(raw) ? raw : []
-    index.push(entry)
-    await store.setJSON('_index', index)
-  } catch {
-    // If index update fails, the file is still stored — listing will
-    // fall back to iterating blobs.
   }
 }

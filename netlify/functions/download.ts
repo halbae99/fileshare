@@ -1,5 +1,40 @@
 import { getStore } from '@netlify/blobs'
 
+function corsJson() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+  }
+}
+
+function extractKey(req: Request): string | null {
+  const url = new URL(req.url)
+
+  // 1. Query parameter (most reliable across Netlify rewrites)
+  const queryKey = url.searchParams.get('key')
+  if (queryKey) return queryKey
+
+  // 2. URL path segment: /api/download/<key>
+  const parts = url.pathname.replace(/\/$/, '').split('/')
+  const last = parts[parts.length - 1]
+  if (last && last !== 'download' && last !== '') return last
+
+  // 3. Netlify original request header (fallback for rewritten URLs)
+  const originalUri = req.headers.get('x-nf-request-uri')
+  if (originalUri) {
+    try {
+      const originalUrl = new URL(originalUri, url.origin)
+      const origKey = originalUrl.searchParams.get('key')
+      if (origKey) return origKey
+      const origParts = originalUrl.pathname.replace(/\/$/, '').split('/')
+      const origLast = origParts[origParts.length - 1]
+      if (origLast && origLast !== 'download' && origLast !== '') return origLast
+    } catch { /* ignore */ }
+  }
+
+  return null
+}
+
 export default async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -15,36 +50,24 @@ export default async (req: Request) => {
     return new Response('Method not allowed', { status: 405 })
   }
 
+  const key = extractKey(req)
+
+  if (!key) {
+    console.error('Download: no key found in request', req.url)
+    return new Response(
+      JSON.stringify({ error: 'File key is required. Use /api/download?key=YOUR_KEY' }),
+      { status: 400, headers: corsJson() }
+    )
+  }
+
   try {
-    const url = new URL(req.url)
-
-    // Extract key: try query param first, then URL path
-    // Supports both:
-    //   /api/download?key=<key>   (query param)
-    //   /api/download/<key>       (path segment)
-    let key = url.searchParams.get('key')
-
-    if (!key) {
-      const pathParts = url.pathname.replace(/\/$/, '').split('/')
-      const lastPart = pathParts[pathParts.length - 1]
-      if (lastPart && lastPart !== 'download') {
-        key = lastPart
-      }
-    }
-
-    if (!key || key === 'download') {
-      return new Response(JSON.stringify({ error: 'File key is required' }), {
-        status: 400,
-        headers: corsJson(),
-      })
-    }
-
     const store = getStore('file-uploads')
     const entry = await store.getWithMetadata(key)
 
     if (!entry || !entry.data) {
+      console.error(`Download: blob not found for key=${key}`)
       return new Response(
-        JSON.stringify({ error: 'File not found' }),
+        JSON.stringify({ error: 'File not found', key }),
         { status: 404, headers: corsJson() }
       )
     }
@@ -55,10 +78,7 @@ export default async (req: Request) => {
     if (metadata?.expiresAt) {
       if (new Date(metadata.expiresAt) < new Date()) {
         return new Response(
-          JSON.stringify({
-            error: 'This download link has expired',
-            expired: true,
-          }),
+          JSON.stringify({ error: 'This download link has expired', expired: true }),
           { status: 410, headers: corsJson() }
         )
       }
@@ -67,32 +87,28 @@ export default async (req: Request) => {
     const contentType = metadata?.contentType || 'application/octet-stream'
     const originalName = metadata?.originalName || key
 
-    // RFC 5987 filename encoding for non-ASCII names
+    // RFC 5987 / RFC 6266 safe filename encoding
+    const asciiName = originalName.replace(/[^\x00-\x7F]/g, '_')
     const encodedName = encodeURIComponent(originalName)
-      .replace(/['()]/g, escape)
-      .replace(/\*/g, '%2A')
 
     return new Response(data, {
       headers: {
         'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${originalName.replace(/"/g, '\\"')}"; filename*=UTF-8''${encodedName}`,
+        'Content-Disposition':
+          `attachment; filename="${asciiName.replace(/"/g, '\\"')}"; filename*=UTF-8''${encodedName}`,
         'Cache-Control': 'no-store, must-revalidate',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Expose-Headers': 'Content-Disposition',
       },
     })
-  } catch (err) {
-    console.error('Download error:', err)
+  } catch (err: any) {
+    console.error('Download error:', err?.message || err)
     return new Response(
-      JSON.stringify({ error: 'Download failed' }),
+      JSON.stringify({
+        error: 'Download failed',
+        detail: err?.message || String(err),
+      }),
       { status: 500, headers: corsJson() }
     )
-  }
-}
-
-function corsJson() {
-  return {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
   }
 }

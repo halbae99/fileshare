@@ -1,5 +1,12 @@
 import { getStore } from '@netlify/blobs'
 
+function corsJson() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+  }
+}
+
 export default async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -22,7 +29,7 @@ export default async (req: Request) => {
     const store = getStore('file-uploads')
     const origin = new URL(req.url).origin
 
-    // Try index first (fast path)
+    // Fast path: use index blob
     const rawIndex = await store.get('_index', { type: 'json' })
 
     if (Array.isArray(rawIndex) && rawIndex.length > 0) {
@@ -37,10 +44,9 @@ export default async (req: Request) => {
         expired: entry.expiresAt
           ? new Date(entry.expiresAt) < now
           : false,
-        downloadUrl: `${origin}/api/download/${entry.key}`,
+        downloadUrl: `${origin}/api/download?key=${entry.key}`,
       }))
 
-      // Sort newest first
       files.sort(
         (a: any, b: any) =>
           new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
@@ -71,7 +77,7 @@ export default async (req: Request) => {
               expired: metadata.expiresAt
                 ? new Date(metadata.expiresAt) < now
                 : false,
-              downloadUrl: `${origin}/api/download/${b.key}`,
+              downloadUrl: `${origin}/api/download?key=${b.key}`,
             }
           } catch {
             return {
@@ -82,7 +88,7 @@ export default async (req: Request) => {
               uploadedAt: '',
               expiresAt: '',
               expired: false,
-              downloadUrl: `${origin}/api/download/${b.key}`,
+              downloadUrl: `${origin}/api/download?key=${b.key}`,
             }
           }
         })
@@ -94,18 +100,11 @@ export default async (req: Request) => {
     )
 
     return new Response(JSON.stringify(files), { headers: corsJson() })
-  } catch (err) {
-    console.error('List files error:', err)
+  } catch (err: any) {
+    console.error('List files error:', err?.message || err)
     return new Response(
-      JSON.stringify({ error: 'Failed to list files' }),
+      JSON.stringify({ error: 'Failed to list files', detail: err?.message || String(err) }),
       { status: 500, headers: corsJson() }
     )
-  }
-}
-
-function corsJson() {
-  return {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
   }
 }
