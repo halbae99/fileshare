@@ -62,9 +62,16 @@ export default async (req: Request) => {
 
   try {
     const store = getStore('file-uploads')
-    const entry = await store.getWithMetadata(key)
 
-    if (!entry || !entry.data) {
+    // Fetch data and metadata separately — getWithMetadata returns data as
+    // a UTF-8 string by default which CORRUPTS binary files (PDF, images, etc).
+    // Using { type: 'arrayBuffer' } preserves raw bytes for all file types.
+    const [data, metadataObj] = await Promise.all([
+      store.get(key, { type: 'arrayBuffer' }),
+      store.getMetadata(key),
+    ])
+
+    if (!data) {
       console.error(`Download: blob not found for key=${key}`)
       return new Response(
         JSON.stringify({ error: 'File not found', key }),
@@ -72,7 +79,7 @@ export default async (req: Request) => {
       )
     }
 
-    const { data, metadata } = entry
+    const metadata = (metadataObj as any)?.metadata || metadataObj || {}
 
     // Check expiration
     if (metadata?.expiresAt) {
