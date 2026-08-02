@@ -22,7 +22,7 @@ function formatSize(bytes: number): string {
 export default function UploadForm({ onUploadComplete }: Props) {
   const [dragOver, setDragOver] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [expiresIn, setExpiresIn] = useState(EXPIRATION_PRESETS[1].value) // default 24h
+  const [expiresIn, setExpiresIn] = useState(EXPIRATION_PRESETS[1].value)
   const [customDays, setCustomDays] = useState(1)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,7 +73,6 @@ export default function UploadForm({ onUploadComplete }: Props) {
     <div className="upload-section">
       <h2>Upload a File</h2>
 
-      {/* Drop zone */}
       <div
         className={`drop-zone ${dragOver ? 'drag-over' : ''} ${selectedFile ? 'has-file' : ''}`}
         onDragOver={(e) => {
@@ -121,7 +120,6 @@ export default function UploadForm({ onUploadComplete }: Props) {
         )}
       </div>
 
-      {/* Expiration selector */}
       <div className="expiration-section">
         <label className="expiration-label">Download link expires in:</label>
         <div className="expiration-presets">
@@ -152,7 +150,6 @@ export default function UploadForm({ onUploadComplete }: Props) {
         )}
       </div>
 
-      {/* Upload button */}
       <button
         className="btn-upload"
         disabled={!selectedFile || uploading}
