@@ -1,0 +1,588 @@
+/* ===== Reset & Base ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text: #1a202c;
+  --text-secondary: #718096;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #eef2ff;
+  --success: #059669;
+  --success-bg: #ecfdf5;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ===== App Layout ===== */
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  text-align: center;
+  padding: 2rem 0 2.5rem;
+}
+
+.app-header h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.logo {
+  margin-right: 0.5rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-top: 0.5rem;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.app-footer {
+  text-align: center;
+  padding: 2rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* ===== Upload Section ===== */
+.upload-section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+}
+
+.upload-section h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+/* Drop Zone */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fafbfc;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.drop-zone.has-file {
+  border-color: var(--success);
+  background: var(--success-bg);
+  border-style: solid;
+}
+
+.drop-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.drop-placeholder p {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.drop-hint {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* File Preview inside drop zone */
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
+.file-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  display: block;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.btn-remove {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.btn-remove:hover {
+  background: var(--danger);
+  color: white;
+}
+
+/* Expiration */
+.expiration-section {
+  margin-top: 1.5rem;
+}
+
+.expiration-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.expiration-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.preset-btn {
+  padding: 0.5rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.15s;
+  color: var(--text);
+}
+
+.preset-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.preset-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.custom-expiry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.custom-expiry input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.custom-expiry span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Upload Button */
+.btn-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  width: 100%;
+  padding: 0.85rem 2rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  justify-content: center;
+}
+
+.btn-upload:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn-upload:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.upload-error {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.upload-success {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--success-bg);
+  color: var(--success);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ===== Error Banner ===== */
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.error-banner button {
+  padding: 0.4rem 1rem;
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ===== Loading ===== */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner-sm {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== File List ===== */
+.file-list {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 1.5rem;
+}
+
+.file-list.empty {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.empty-state span {
+  font-size: 0.9rem;
+}
+
+.file-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.file-list-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+}
+
+.btn-refresh {
+  padding: 0.4rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+
+.btn-refresh:hover {
+  background: var(--border);
+}
+
+/* File Table */
+.file-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.file-row:last-child {
+  border-bottom: none;
+}
+
+.file-row.expired {
+  opacity: 0.55;
+  background: #f9fafb;
+  margin: 0 -1.5rem;
+  padding: 1rem 1.5rem;
+}
+
+.file-cell {
+  display: flex;
+}
+
+.file-cell.name {
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.file-row-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.file-row-name {
+  display: block;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+.file-row-meta {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.file-cell.expiry {
+  flex-shrink: 0;
+}
+
+.status-active {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.status-expired {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.file-cell.actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-copy,
+.btn-download {
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+  border: none;
+}
+
+.btn-copy {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.btn-copy:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-download {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.btn-download:hover {
+  background: var(--success);
+  color: white;
+}
+
+.btn-disabled {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0.4rem 0.85rem;
+  white-space: nowrap;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .app {
+    padding: 1rem;
+  }
+
+  .app-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .file-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .file-cell.actions {
+    width: 100%;
+  }
+
+  .btn-copy,
+  .btn-download {
+    flex: 1;
+    text-align: center;
+  }
+}
