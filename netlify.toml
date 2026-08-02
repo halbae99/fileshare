@@ -5,6 +5,12 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  node_version = "20"
+
+[dev]
+  command = "npm run dev"
+  port = 5173
+  targetPort = 8888
 
 [[redirects]]
   from = "/api/*"

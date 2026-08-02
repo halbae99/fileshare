@@ -1,7 +1,8 @@
 import { getStore } from '@netlify/blobs'
+import { randomUUID } from 'node:crypto'
 
-// Maximum file size: 25 MB
-const MAX_FILE_SIZE = 25 * 1024 * 1024
+// Maximum file size: 5 MB (Netlify Functions sync body limit ~6 MB)
+const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 export default async (req: Request) => {
   // CORS preflight
@@ -45,7 +46,9 @@ export default async (req: Request) => {
 
     if (file.size > MAX_FILE_SIZE) {
       return new Response(
-        JSON.stringify({ error: 'File too large. Maximum size is 25 MB' }),
+        JSON.stringify({
+          error: `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)} MB`,
+        }),
         { status: 413, headers: corsJson() }
       )
     }
@@ -64,8 +67,8 @@ export default async (req: Request) => {
     const now = Date.now()
     const expiresAt = new Date(now + clampedExpiresInMs).toISOString()
 
-    // Generate unique key
-    const key = crypto.randomUUID()
+    // Generate unique key (Node.js 18+ compatible via node:crypto import)
+    const key = randomUUID()
     const buffer = await file.arrayBuffer()
 
     const store = getStore('file-uploads')

@@ -16,10 +16,21 @@ export default async (req: Request) => {
   }
 
   try {
-    // Extract key from URL: /api/download/<key>
     const url = new URL(req.url)
-    const pathParts = url.pathname.replace(/\/$/, '').split('/')
-    const key = pathParts[pathParts.length - 1]
+
+    // Extract key: try query param first, then URL path
+    // Supports both:
+    //   /api/download?key=<key>   (query param)
+    //   /api/download/<key>       (path segment)
+    let key = url.searchParams.get('key')
+
+    if (!key) {
+      const pathParts = url.pathname.replace(/\/$/, '').split('/')
+      const lastPart = pathParts[pathParts.length - 1]
+      if (lastPart && lastPart !== 'download') {
+        key = lastPart
+      }
+    }
 
     if (!key || key === 'download') {
       return new Response(JSON.stringify({ error: 'File key is required' }), {
